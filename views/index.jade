@@ -1,0 +1,70 @@
+extends layout
+
+block content
+
+  #splash
+    #splashDiv
+      span#splashText
+  script(type='text/javascript').
+    var splash = {};
+    splash.timer = setInterval(function() {updateLoading();}, 1000);
+    $("#splashDiv").css('margin-top',$(window).height()/2-30);
+    function updateLoading() {
+        if ($("#splashText").html() == "Loading") {
+            $("#splashText").html("Loading.");
+        }
+        else if ($("#splashText").html() == "Loading.") {
+            $("#splashText").html("Loading..");
+        }
+        else if ($("#splashText").html() == "Loading..") {
+            $("#splashText").html("Loading...");
+        }
+        else {
+            $("#splashText").html("Loading");
+        }
+    }
+    $(document).ready(function() {
+        $("#splash").remove();
+        $("#splashScript").remove();
+        delete splash;
+    })
+    
+  #head
+    h1.c(style='margin-top: 5px') Forecash
+    
+  #fixed
+    #chart(ng-controller='ForecastControl')
+      nvd3-line-chart(data='forecastData',
+                      id='chartDiv',
+                      interactive='true'
+                      margin='{top: 20, bottom:25, left: 80, right: 50}'
+                      showXAxis='true'
+                      showYAxis='true'
+                      tooltips='true'
+                      objectEquality='true'
+                      xAxisTickFormat='xAxisTickFormatFunction()'
+                      yAxisTickFormat='yAxisTickFormatFunction()'
+                      tooltipcontent='toolTipContentFunction()')
+        svg
+    #controls
+      input#redraw_trigger(type="hidden")
+      | Start:
+      input#date_forecastStart.decor(style='width:100px')
+      | End:
+      input#date_forecastEnd.decor(style='width:100px')
+      #button_view.button.btn_blue(onclick='view_manageTransactions("main")')
+        span TRANSACTION VIEW
+    #transaction_wide
+  
+  #header
+  
+  #main
+    table#forecastHead.stripped.mc.col1dr.col1p20.col2r.col2p20.col3r.col3p20.col4r.col4p20.col5dl.col5hc
+      thead
+        tr(style='height: 40px')
+          th#thf0 Date
+          th#thf1 Balance
+          th#thf2 Credit
+          th#thf3 Debt
+          th#thf4 Description
+    table#forecast.mc.col1dr.col1p20.col2r.col2p20.col3r.col3p20.col4r.col4p20.col5dl.col5hc
