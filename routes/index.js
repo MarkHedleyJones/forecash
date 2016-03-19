@@ -12,7 +12,7 @@ router.get('/events', function (req, res) {
     events = {
         "balances": [
             {
-                "date": "2014-11-26",
+                "date": "2016-3-19",
                 "balance": 2683.59
             }
         ],
@@ -30,7 +30,7 @@ router.get('/events', function (req, res) {
             {
                 "name": "Car Insurance",
                 "amount": -30.00,
-                "occurs": "every fortnight from 2013-10-30"
+                "occurs": "every fortnight"
             },
             {
                 "name": "Rent",
@@ -55,17 +55,17 @@ router.get('/events', function (req, res) {
             {
                 "name": "Vehicle registration",
                 "amount": -147.58,
-                "occurs": "on the 1st of every third month from 2014-06-1"
+                "occurs": "on the 1st of every third month"
             },
             {
                 "name": "Vehicle warrant of fitness",
                 "amount": -55.00,
-                "occurs": "on the 28th of every 9 months from 2014-03-28"
+                "occurs": "on the 28th of every 9 months"
             },
             {
                 "name": "Gym membership",
                 "amount": -21.90,
-                "occurs": "every fortnight from 2014-07-31"
+                "occurs": "every fortnight"
             },
             {
                 "name": "Weekend spending money",

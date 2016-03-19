@@ -28,10 +28,10 @@ block content
         $("#splashScript").remove();
         delete splash;
     })
-    
+
   #head
     h1.c(style='margin-top: 5px') Forecash
-    
+
   #fixed
     #chart(ng-controller='ForecastControl')
       nvd3-line-chart(data='forecastData',
@@ -55,9 +55,9 @@ block content
       #button_view.button.btn_blue(onclick='view_manageTransactions("main")')
         span TRANSACTION VIEW
     #transaction_wide
-  
+
   #header
-  
+
   #main
     table#forecastHead.stripped.mc.col1dr.col1p20.col2r.col2p20.col3r.col3p20.col4r.col4p20.col5dl.col5hc
       thead

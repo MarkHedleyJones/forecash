@@ -16,6 +16,8 @@ else {
 }
 var dialog;
 
+
+/************************************************ LIB START ******************/
 Number.prototype.formatMoney = function(c, d, t){
 var n = this,
     c = isNaN(c = Math.abs(c)) ? 2 : c,
@@ -27,6 +29,17 @@ var n = this,
    return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
 };
 
+function arraysEqual(a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (a.length != b.length) return false;
+
+  for (var i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
 function dateAsLocale (date) {
     return date.getUTCDate() + '/' + ( date.getUTCMonth() + 1 ) + '/' + date.getUTCFullYear();
 }
@@ -36,7 +49,8 @@ function dateDiff (dateRef, dateCmp) {
     return Math.floor(diff / 86400000);
 }
 
-var fortnightStartDate = new Date(1970,0,5);
+var epoh = new Date(1970, 0, 4); // First JS day of the week (Sunday) 1970
+// Monday is ISO first day of the, but Sunday is day 0 in Javascript so Sunday is used
 
 var Monday = 1;
 var Tuesday = 2;
@@ -46,17 +60,52 @@ var Friday = 5;
 var Saturday = 6;
 var Sunday = 0;
 
-var ms_day = 1000*60*60*24;
+var ms_day = 1000.0*60.0*60.0*24.0;
 var ms_week = ms_day * 7;
-var ms_fortnight = ms_week * 2;
+var today = new Date();
 
 
-var fortnight_even = function(date) {
-    return (date.getTime() - fortnightStartDate.getTime()) % ms_fortnight < ms_week;
-}
+var stride_week = function(date, stride, offset=null) {
+    // console.log(date, stride, offset);
+    /*
+    Takes a date and a stride (as in 2 for fortnight, 3 for three weeks)
+    and returns whether this week falls within that date.
+    An offset can shift the week within the window
+    */
+    if (offset === null) {
+        offset = 0;
+    }
+    else if (offset instanceof Date) {
+        // console.log("Date offset = ",offset);
+        od = offset;
+        offset = (od.getTime() - epoh.getTime()) % (ms_week * stride);
+    }
+    else {
+        // console.log("Unknown offset value - omitting");
+        offset = 0;
+    }
+    // console.log('offset =',offset,'=',offset/ms_day,'days');
+    // console.log(epoh);
+    // console.log(date);
+    // console.log('date.getTime() = ', date.getTime(), "=", (date.getTime()/ms_day), 'days since epoh');
+    // console.log('epoh.getTime() = ', epoh.getTime(), "=", (epoh.getTime()/ms_day), 'days since epoh');
 
-var fortnight_odd = function(date) {
-    return !((date.getTime() - fortnightStartDate.getTime()) % ms_fortnight < ms_week);
+    var full_width = date.getTime() - epoh.getTime() - offset;
+    // console.log('full_width =', full_width,'=',full_width/ms_day,'days');
+    var stride = ms_week * stride;
+    // console.log('stride =',stride,'=',stride/ms_day,'days');
+    var displacement = full_width % stride;
+    // console.log('displacement =',displacement,'=',displacement/ms_day,'days');
+    var displacement_days = Math.ceil(displacement / ms_day);
+    // console.log('displacement_days =',displacement_days,'days');
+
+
+    // console.log('safe_zone =', ms_week,'=',ms_week/ms_day,'days');
+    if (stride <= 1) return true;
+    else return displacement_days <= 7;
+
+    // return (((date.getTime() - epoh.getTime()) % (ms_week * stride)) - offset * ms_week) < ms_week;
+
 }
 
 function secondsBetween(date_ref, date_cmp) {
@@ -213,21 +262,307 @@ function dateISO(date) {
 }
 
 function stringToDate(dateString) {
-    newStr = dateString.valueOf();
-    var tmp = newStr.split("-");
-    return newDate(tmp[0], tmp[1], tmp[2]);
+    var delimiter;
+    var iso_order = false;
+    dateStr = dateString.valueOf();
+
+    if (dateString.indexOf('/') != -1) delimiter = '/';
+    else delimiter = '-';
+
+    // console.log(delimiter);
+
+    var parts = dateStr.split(delimiter);
+
+    if (parts.length == 3) {
+        if (parseInt(parts[0]) > parseInt(parts[2])) iso_order = true;
+        else iso_order = false;
+    }
+    if (parts.length == 2) {
+        iso_order = true;
+        parts.push(today.getFullYear());
+    }
+
+    var out_date;
+
+    if (iso_order) out_date = newDate(parts[0], parts[1], parts[2]);
+    else out_date = newDate(parts[2], parts[1], parts[0]);
+
+    // console.log(dateString,'->',out_date,parts);
+    // console.log(parseInt(parts[2]), parseInt(parts[1]), parseInt(parts[0]));
+    return out_date;
 }
 
+function date_int(date) {
+    return Math.floor(date.getTime() / ms_day);
+}
+
+
 function happensAfter(date, referenceDate) {
-    return date.valueOf() > referenceDate.valueOf();
+    return (date.valueOf() / ms_day) > (referenceDate.valueOf() / ms_day);
 }
 
 function happensBefore(date, referenceDate) {
-    return date.valueOf() < referenceDate.valueOf();
+    return (date.getTime() / ms_day) < (referenceDate.valueOf() / ms_day);
 }
 
+function parse_dayOfMonth(string) {
+    suffix = string.slice(string.length-2, string.length);
+    if (dom_suffix.indexOf(suffix) != -1) {
+        out = parseInt(string.slice(0,string.length-2));
+        if (out < 31) return out;
+    }
+    return -1;
+}
 
-/************************************************ AFTER ***************/
+function parse_subNatLang(keys, values) {
+    if (arraysEqual(keys, ["dayofmonth"])) {
+        // console.log("It must occur before " + values[1]);
+        return function(date) { return date.getDate() == values[0]; };
+    }
+    else if (arraysEqual(keys, ["weekday"])) {
+        return function (date) { return date.getDay() == daysofweek.indexOf(values[0]); };
+    }
+    else if (arraysEqual(keys, ["quantifier", "weekday"])) {
+        return function(date) { return (date.getDay() == daysofweek.indexOf(values[1])) && stride_week(date, values[0])};
+    }
+
+    else if (arraysEqual(keys, ["quantifier", "weekday", "date", "date"])) {
+        // Every wednesday 16/3/2016
+        // console.log('Matched format ["quantifier", "weekday", "date"]')
+        return function(date) {
+            return (date.getDay() == daysofweek.indexOf(values[1]) &&
+                    stride_week(date, values[0], values[2]) &&
+                    date_int(date) >= date_int(values[2]) &&
+                    date_int(date) <= date_int(values[3]))
+            };
+    }
+    else if (arraysEqual(keys, ["quantifier", "weekday", "date"])) {
+        // Every wednesday 16/3/2016
+        // console.log('Matched format ["quantifier", "weekday", "date"]')
+        return function(date) {
+            return (date.getDay() == daysofweek.indexOf(values[1]) &&
+                    stride_week(date, values[0], values[2]) &&
+                    date_int(date) >= date_int(values[2]))
+            };
+    }
+    else if (arraysEqual(keys, ["quantifier", "weekday", "range", "date", "date"])) {
+        // Every wednesday from 16/3/2016
+        // console.log('Matched format ["quantifier", "weekday", "range", "date", "date"]')
+        return function(date) {
+            return (date.getDay() == daysofweek.indexOf(values[1]) &&
+                    stride_week(date, values[0], values[3]) &&
+                    date_int(date) >= date_int(values[3]) &&
+                    date_int(date) <= date_int(values[4]))
+            };
+    }
+    else if (arraysEqual(keys, ["quantifier", "weekday", "phase_adjust", "date"])) {
+        return function(date) {
+            return (date.getDay() == daysofweek.indexOf(values[1]) &&
+                    stride_week(date, values[0], values[3]))
+            };
+    }
+    else if (arraysEqual(keys, ["quantifier", "weekday", "range_start", "date", "range_end", "date"])) {
+        // Every wednesday from 16/3/2016
+        // console.log('Matched format ["quantifier", "weekday", "range_start", "date", "range_end", "date"]')
+        return function(date) {
+            return (date.getDay() == daysofweek.indexOf(values[1]) &&
+                    stride_week(date, values[0], values[3]) &&
+                    date_int(date) >= date_int(values[3]) &&
+                    date_int(date) <= date_int(values[5]))
+            };
+    }
+    else if (arraysEqual(keys, ["quantifier", "weekday", "range_start", "date"])) {
+        // Every wednesday from 16/3/2016
+        // console.log('Matched format ["quantifier", "weekday", "range_start", "date"]')
+        return function(date) {
+            return (date.getDay() == daysofweek.indexOf(values[1]) &&
+                    stride_week(date, values[0], values[3]) &&
+                    date_int(date) >= date_int(values[3]))
+            };
+    }
+    else if (arraysEqual(keys, ["range_start", "date"])) {
+        // console.log("It must occur after " + values[1]);
+        return function(date) { return happensAfter(date, values[1]); };
+    }
+    else if (arraysEqual(keys, ["range_end", "date"])) {
+        // console.log("It must occur before " + values[1]);
+        return function(date) { return happensBefore(date, values[1]); };
+    }
+    else if (arraysEqual(keys, ["quantifier", "time_unit", "range_start", "date"])) {
+        if (values[1] == 'month') {
+            // on the 1st of every third month from 2014-01-01
+            // function (date) { return date.getMonth() % 6 == 3 && date.getDate() == 1; }
+            return function(date) { return date.getMonth() % values[0] == values[3].getMonth() % values[0]};
+        }
+        else if (values[1] == 'week') {
+            return function(date) { return whole(days_between(date, values[3])) % (7 * values[0])  == 0; };
+        }
+
+    }
+    else if (arraysEqual(keys, ["quantifier", "time_unit"]) && values[1] == "week") {
+        // Every fortnight (no day specified)
+        return function(date) {
+            return (date.getDay() == 0 &&
+                    stride_week(date, values[0]))
+            };
+    }
+    else if (arraysEqual(keys, ["dayofmonth", "month"])) {
+        return function(date) { return date.getMonth() == monthnames.indexOf(values[1]) && date.getDate() == values[0]; };
+    }
+    else if (arraysEqual(keys, ["date"])) {
+        return function(date) { return date.getFullYear() == values[0].getFullYear() && (date.getMonth()) == values[0].getMonth() && date.getDate() == values[0].getDate();}
+    }
+    else {
+        // console.log("Failed to match format", keys);
+        return false;
+    }
+}
+
+function parse_dateCondition(string, date, title) {
+    // "every second Tuesday after 2015-2-16"
+    // function (date) { return date.getDay() === Tuesday && fortnight_even(date) && (happensAfter(date, newDate(2015,2,16)) || happensBefore(date, newDate(2014,12,10))) }
+
+    chunks = string.toLowerCase().split(' ');
+
+    part_keys = []
+    part_vals = []
+    // console.log(chunks);
+    for (var key = 0; key < chunks.length; key++) {
+        part_val = '';
+        part_key = '';
+        part = chunks[key];
+        if (daysofweek.indexOf(part) != -1) {
+            part_key = 'weekday';
+            part_val = part;
+        }
+        else if (digits.indexOf(part) != -1) {
+            part_key = 'quantifier';
+            part_val = digits.indexOf(part);
+        }
+        else if (part == 'fortnight') {
+            part_keys.push('quantifier');
+            part_vals.push(2);
+            part_key = 'time_unit';
+            part_val = 'week';
+        }
+        else if (part.slice(0,5) == 'month') {
+            part_key = 'time_unit';
+            part_val = 'month';
+        }
+        else if (part.slice(0,3) == 'day') {
+            part_key = 'time_unit';
+            part_val = 'day';
+        }
+        else if (monthnames.indexOf(part) != -1) {
+            part_key = 'month';
+            part_val = part;
+        }
+        else if (part.slice(0,4) == 'year') {
+            part_key = 'time_unit';
+            part_val = 'year';
+        }
+        else if (part == 'odd' || part == 'other') {
+            part_key = 'quantifier';
+            part_val = -2;
+        }
+        else if (part.length > 2 && parse_dayOfMonth(part) != -1) {
+            part_key = 'dayofmonth';
+            part_val = parse_dayOfMonth(part);
+        }
+        else if (quantifier.indexOf(part) != -1) {
+            part_key = 'quantifier';
+            part_val = quantifier.indexOf(part);
+        }
+        else if (numbers.indexOf(part) != -1) {
+            part_key = 'quantifier';
+            part_val = numbers.indexOf(part);
+        }
+        else if (part == 'after') {
+            part_key = 'range_start';
+            part_val = '>';
+        }
+        else if (part == 'from') {
+            part_key = 'range_start';
+            part_val = '>';
+        }
+        else if (part == 'starting') {
+            part_key = 'range_start';
+            part_val = '>';
+        }
+        else if (part == 'to') {
+            part_key = 'range_end';
+            part_val = '<';
+        }
+        else if (part == 'before') {
+            part_key = 'range_end';
+            part_val = '<';
+        }
+        else if (part == 'between') {
+            part_key = 'range';
+            part_val = '--';
+        }
+        else if (part == 'including') {
+            part_key = 'phase_adjust';
+            part_val = '>-<';
+        }
+        else if (part.indexOf('-') != -1) {
+            part_key = 'date';
+            part_val = stringToDate(part);
+        }
+        else if (part.indexOf('/') != -1) {
+            part_key = 'date';
+            part_val = stringToDate(part);
+        }
+
+        // If part parsed, add it to the list
+        if (part_key != '') {
+            part_keys.push(part_key);
+            part_vals.push(part_val);
+        }
+
+    }
+    // console.log(part_keys);
+    // console.log(part_vals);
+
+    logic = []
+    // console.log(part_keys + ", " + part_vals);
+    log = "";
+    var finished = false;
+    var loop_count = 0;
+    if (part_keys.length > 0) {
+
+        for (var start = 0; start < part_keys.length; start++) {
+            last_segment = false;
+
+            for (var end = part_keys.length; end > start; end--) {
+
+                segment = parse_subNatLang(part_keys.slice(start,end), part_vals.slice(start, end));
+                if (segment != false) {
+                    logic.push(segment);
+                    start = end+1;
+                }
+                if (loop_count > 20) break;
+            }
+            if (finished) {
+                log = log + " || Finished";
+                break;
+            }
+        }
+    }
+    else {
+        return false;
+    }
+    // console.log(log);
+    // console.log(logic);
+
+    var ans = true;
+    for (var key = 0; key < logic.length; key++) {
+        if (logic[key](date) == false) ans = false;
+    }
+
+    return ans;
+}
+/************************************************ LIB END ********************/
 
 
 var tableObj = $( "#forecast" );
@@ -319,232 +654,6 @@ function adjustLayout() {
         $('#nv-point-highlighted').attr('r',5);
         $('#nv-point-today').attr('r',5);
     }, 50);
-}
-
-
-function parse_dayOfMonth(string) {
-    suffix = string.slice(string.length-2, string.length);
-    if (dom_suffix.indexOf(suffix) != -1) {
-        out = parseInt(string.slice(0,string.length-2));
-        if (out < 31) return out;
-    }
-    return -1;
-}
-
-
-function parse_dateCondition(string, date, title) {
-    // "every second Tuesday after 2015-2-16"
-    // function (date) { return date.getDay() === Tuesday && fortnight_even(date) && (happensAfter(date, newDate(2015,2,16)) || happensBefore(date, newDate(2014,12,10))) }
-
-    chunks = string.toLowerCase().split(' ');
-
-    part_keys = []
-    part_vals = []
-    for (var key = 0; key < chunks.length; key++) {
-        part_val = '';
-        part_key = '';
-        part = chunks[key];
-        if (daysofweek.indexOf(part) != -1) {
-            part_key = 'weekday';
-            part_val = part;
-        }
-        else if (digits.indexOf(part) != -1) {
-            part_key = 'quantifier';
-            part_val = digits.indexOf(part);
-        }
-        else if (part == 'fortnight') {
-            part_keys.push('quantifier');
-            part_vals.push(2);
-            part_key = 'time_unit';
-            part_val = 'week';
-        }
-        else if (part.slice(0,5) == 'month') {
-            part_key = 'time_unit';
-            part_val = 'month';
-        }
-        else if (part.slice(0,3) == 'day') {
-            part_key = 'time_unit';
-            part_val = 'day';
-        }
-        else if (monthnames.indexOf(part) != -1) {
-            part_key = 'month';
-            part_val = part;
-        }
-        else if (part.slice(0,4) == 'year') {
-            part_key = 'time_unit';
-            part_val = 'year';
-        }
-        else if (part == 'odd' || part == 'other') {
-            part_key = 'quantifier';
-            part_val = -2;
-        }
-        else if (part.length > 2 && parse_dayOfMonth(part) != -1) {
-            part_key = 'dayofmonth';
-            part_val = parse_dayOfMonth(part);
-        }
-        else if (quantifier.indexOf(part) != -1) {
-            part_key = 'quantifier';
-            part_val = quantifier.indexOf(part);
-        }
-        else if (numbers.indexOf(part) != -1) {
-            part_key = 'quantifier';
-            part_val = numbers.indexOf(part);
-        }
-        else if (part == 'after') {
-            part_key = 'range_start';
-            part_val = '>';
-        }
-        else if (part == 'from') {
-            part_key = 'range_start';
-            part_val = '>';
-        }
-        else if (part == 'before') {
-            part_key = 'range_end';
-            part_val = '<';
-        }
-        else if (part.indexOf('-') != -1) {
-            part_key = 'date';
-            part_val = stringToDate(part);
-        }
-        if (part_key != '') {
-            part_keys.push(part_key);
-            part_vals.push(part_val);
-        }
-
-    }
-    logic = []
-    //console.log(part_keys + ", " + part_vals);
-    log = "";
-    var finished = false;
-    if (part_keys.length > 0) {
-
-        for (var start = 0; start < part_keys.length; start++) {
-            last_segment = false;
-
-            for (var end = start + 1; end < part_keys.length + 1; end++) {
-
-                this_segment = parse_subNatLang(part_keys.slice(start,end), part_vals.slice(start, end));
-                log = log + " || [" + part_keys[start] + "-" + part_keys[end-1] + "] = " + this_segment;
-
-
-                if (this_segment == false && last_segment != false) {
-                    // Now we've gone too far so the chain has been broken.
-                    // console.log("Chain broken, saving and moving on - setting start to " +  (end-1));
-                    log = log + " || No match, Pushing last segment onto stack";
-                    start = end - 2;
-                    logic.push(last_segment);
-                    break;
-                }
-                else if (this_segment != false && end == part_keys.length) {
-                    // Now we've gone too far so the chain has been broken.
-                    // console.log("Weve hit the end");
-                    log = log + " || Hit the end with a match, Pushing this segment onto stack";
-                    logic.push(this_segment);
-                    finished = true;
-                    break;
-                }
-                else if (this_segment == false && end == part_keys.length) {
-                    log = log + " || Hit the end with no match - dont know what to do";
-                    // console.log("Skipping over element [" + part_keys[start-1] + ": " + part_vals[start-1] + "] as no match");
-                }
-                last_segment = this_segment;
-            }
-            if (finished) {
-                log = log + " || Finished";
-                break;
-            }
-        }
-    }
-    else {
-        // console.log("Reoccurance string was not understood:" + string);
-        return false;
-    }
-
-    // if (title == "Trip Auckland to Whangarei") {
-    //     console.log(string);
-    //     console.log(string.toLowerCase().split(' '));
-    //     console.log(string.toLowerCase());
-    //     console.log(chunks);
-    //     console.log(part_keys);
-    //     console.log(part_vals);
-    //     console.log("");
-    //     console.log(log);
-    // }
-
-    var ans = true;
-    for (var key = 0; key < logic.length; key++) {
-        if (logic[key](date) == false) ans = false;
-    }
-    // if (ans) console.log(date + ", " + string + ", " + logic + ", " + ans);
-    // if (date.getDate() == 1 && date.getMonth() == 10 && string.indexOf("1st") != -1) {
-    //     console.log(date)
-    //     console.log(string);
-    //     console.log(part_keys + " :: " + part_vals);
-    //     console.log(log);
-    //     console.log(date.getMonth())
-    //     console.log(date.getMonth() % 3);
-    //     for (var key = 0; key < logic.length; key++) {
-    //         if (logic[key](date) == false) {
-    //             console.log("Logic item " + key + " failed");
-    //         }
-    //         else console.log("Logic item " + key + " passed");
-    //     }
-    //     console.log("")
-    // }
-    return ans;
-}
-
-function arraysEqual(a, b) {
-  if (a === b) return true;
-  if (a == null || b == null) return false;
-  if (a.length != b.length) return false;
-
-  for (var i = 0; i < a.length; ++i) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-}
-
-function parse_subNatLang(keys, values) {
-    if (arraysEqual(keys, ["dayofmonth"])) {
-        // console.log("It must occur before " + values[1]);
-        return function(date) { return date.getDate() == values[0]; };
-    }
-    else if (arraysEqual(keys, ["weekday"])) {
-        return function (date) { return date.getDay() == daysofweek.indexOf(values[0]); };
-    }
-    else if (arraysEqual(keys, ["quantifier", "weekday"]) && values[0] == 2) {
-        return function(date) { return (date.getDay() == daysofweek.indexOf(values[1])) && fortnight_even(date); };
-    }
-    else if (arraysEqual(keys, ["quantifier", "weekday"]) && values[0] == -2) {
-        return function(date) { return (date.getDay() == daysofweek.indexOf(values[1])) && fortnight_odd(date); };
-    }
-    else if (arraysEqual(keys, ["range_start", "date"])) {
-        // console.log("It must occur after " + values[1]);
-        return function(date) { return happensAfter(date, values[1]); };
-    }
-    else if (arraysEqual(keys, ["range_end", "date"])) {
-        // console.log("It must occur before " + values[1]);
-        return function(date) { return happensBefore(date, values[1]); };
-    }
-    else if (arraysEqual(keys, ["quantifier", "time_unit", "range_start", "date"])) {
-        if (values[1] == 'month') {
-            // on the 1st of every third month from 2014-01-01
-            // function (date) { return date.getMonth() % 6 == 3 && date.getDate() == 1; }
-            return function(date) { return date.getMonth() % values[0] == values[3].getMonth() % values[0]};
-        }
-        else if (values[1] == 'week') {
-            return function(date) { return whole(days_between(date, values[3])) % (7 * values[0])  == 0; };
-        }
-
-    }
-    else if (arraysEqual(keys, ["dayofmonth", "month"])) {
-        return function(date) { return date.getMonth() == monthnames.indexOf(values[1]) && date.getDate() == values[0]; };
-    }
-    else if (arraysEqual(keys, ["date"])) {
-        return function(date) { return date.getFullYear() == values[0].getFullYear() && (date.getMonth()) == values[0].getMonth() && date.getDate() == values[0].getDate();}
-    }
-    else return false;
 }
 
 function Forecast(dateStart, dateEnd, events, openingBalance) {
@@ -873,9 +982,11 @@ function createPage(data) {
 
     openingBalance = 0;
 
-    var date_forecastStart = newDate(2014,8,01);
-    var date_forecastEnd = newDate(2015,6,01);
+    // var date_forecastStart = newDate(2014,8,01);
+    // var date_forecastEnd = newDate(2015,6,01);
 
+    var date_forecastStart = newDate(2016,3,01);
+    var date_forecastEnd = newDate(2016,10,01);
 
     if (events['balances'] != undefined) {
         date_forecastStart = new Date(1970, 0, 1);
@@ -959,7 +1070,7 @@ function view_manageTransactions() {
     $( "#main").tabs();
     $( "#button_view" ).attr('onclick', 'view_forecastTable()');
     $( "#button_view" ).html('<span>FORECAST VIEW</span>');
-    $( "#main-1" ).html('<form><div class="view_panel"><div style="-moz-user-select: none;" class="button btn_red" onclick="manageTransaction(-1)"><span><b>+</b> ADD NEW</span></div></div><div class="view_tableContainer"><table id="table_reoccurring" class="mc col1r col2l col2p20r col3r col3p20 col4l col4p20 trans_view"></table></div></form>');
+    $( "#main-1" ).html('<div id="hidden_popup_transactions" style="display: none"></div><form><div class="view_panel"><div style="-moz-user-select: none;" class="button btn_red" onclick="manageTransaction(-1)"><span><b>+</b> ADD NEW</span></div></div><div class="view_tableContainer"><table id="table_reoccurring" class="mc col1r col2l col2p20r col3r col3p20 col4l col4p20 trans_view"></table></div></form>');
     $( "#main-2" ).html('<form><div class="view_panel"></div><div class="view_tableContainer"><table id="table_relative" class="mc col1r col2l col2p20r col3r col3p20 col4l col4p20 trans_view"></table></div></form>');
     $( "#main-3" ).html('<form><div class="view_panel"></div><div class="view_tableContainer"><table id="table_balances" class="mc col1r col2l col2p20r col3p20 col3r trans_view"></table></div></form>');
     var e = null;
@@ -982,7 +1093,7 @@ function view_manageTransactions() {
 
     var d = "";
     d += '<div class="hidden" title="Add new transaction" id="form_reocurring" class="dialogForm">';
-    d += '  <form>';
+    d += '  <form onsubmit="saveTransaction(); return false;">';
     d += '    <fieldset>';
     d += '      <div>';
     d += '        <div class="form_container" style="width: 445px">';
@@ -1002,9 +1113,10 @@ function view_manageTransactions() {
     d += '      </div>';
     d += '    </fieldset>';
     d += '    <input type="hidden" name="transaction_index" id="transaction_index" value="-1">';
+    d += '    <input type="submit" style="display: none"/>';
     d += '  </form>';
     d += '</div>';
-    $( "#main-1").append(d);
+    $( "#hidden_popup_transactions").html(d);
     $( "#calendarView").html('<div onclick="render_calendars(-1)" class="calendar_control"><span style="background-position: 0 0"></span></div><div id="calendar_1" class="view_calendar"></div><div id="calendar_2" class="view_calendar"></div><div id="calendar_3" class="view_calendar"></div><div onclick="render_calendars(1)" class="calendar_control"><span style="background-position: -26px 0"></span></div>');
     window.spentSliderContainer = document.querySelector('.js-switch');
     window.spentSlider = new Switchery(window.spentSliderContainer, {secondaryColor: '#64BD63', color: '#DB5552'});
@@ -1027,17 +1139,28 @@ function render_calendars(month_offset) {
 
 function parse_occurrence_pattern() {
     value = document.getElementById("occurrence_pattern").value;
-    tmp_date = new Date();
-    tmp_date.setDate(tmp_date.getDay() - (tmp_date.getDay() - 1));
-    tmp_date.setMonth(tmp_date.getMonth() + window.calendar_offset);
-    $(".occurrenceMatch").removeClass('occurrenceMatch');
-    for (var i = 0; i < 126; i++) {
-        out = parse_dateCondition(value, tmp_date, "blah");
-        if (out) {
 
-            $("#cal_"+dateISO(tmp_date)).addClass('occurrenceMatch');
-        }
+    tmp_date = new Date();
+    tmp_date.setDate(tmp_date.getDay() - (tmp_date.getDay() - 1)); // Set to 0
+    tmp_date.setMonth(tmp_date.getMonth() + window.calendar_offset);
+    tmp_date.setHours(0,0,0,0);
+
+    $(".occurrenceMatch").removeClass('occurrenceMatch');
+
+    // Populate a dates array because things get mucked up recycling the same date object
+    var dates = []
+    for (var i = 0; i < 93; i++) {
+        dates.push(new Date(tmp_date));
         tmp_date.setDate(tmp_date.getDate() + 1);
+    }
+
+    console.log(dates[0], dates[-1]);
+
+    for (var i = 0; i < 93; i++) {
+        out = parse_dateCondition(value, dates[i], "blah");
+        if (out) {
+            $("#cal_"+dateISO(dates[i])).addClass('occurrenceMatch');
+        }
     }
 }
 
@@ -1116,7 +1239,7 @@ function manageTransaction(index) {
         $("#amount").addClass("green");
     }
 
-    dialog = $( "#form_reocurring" ).dialog({
+    window.dialog_handle = $( "#form_reocurring" ).dialog({
         autoOpen: false,
         height: 450,
         width: 980,
@@ -1124,22 +1247,34 @@ function manageTransaction(index) {
         buttons: {
             "Save": saveTransaction,
             Cancel: function() {
-                dialog.dialog( "close" );
+                window.dialog_handle.dialog( "close" );
             }
         },
         close: function() {
             allFields.removeClass( "ui-state-error" );
         }
     });
-    dialog.dialog( "open" );
+    window.dialog_handle.dialog( "open" );
 }
 
 function saveTransaction() {
-    name = $( "#name" ).val();
-    amount = parseFloat($( "#amount" ).val().replace(',',''));
-    spent = window.spentSliderContainer.checked;
-    pattern = $( "#occurrence_pattern" ).val();
-    index = $( "#transaction_index" ).val();
+    // var name = $( "#name" ).val();
+    // alert(name);
+    // var amount = parseFloat($( "#amount" ).val().replace(',',''));
+    // var spent = window.spentSliderContainer.checked;
+    // var pattern = $( "#occurrence_pattern" ).val();
+    // var index = $( "#transaction_index" ).val();
+    // window.dialog_handle.dialog( "close" );
+
+    // console.log(name, amount, spent, pattern, index);
+
+    var name = $( "#name" ).val();
+    var amount = parseFloat($( "#amount" ).val().replace(',',''));
+    var spent = window.spentSliderContainer.checked;
+    var pattern = $( "#occurrence_pattern" ).val();
+    var index = $( "#transaction_index" ).val();
+    window.dialog_handle.dialog( "close" );
+    $(".ui-dialog").remove();
 
     if ((spent && amount > 0) || (!spent && amount < 0)) amount = -amount;
     transaction = {
@@ -1147,15 +1282,32 @@ function saveTransaction() {
         "amount": amount,
         "occurs": pattern
     }
-    if (index < 0) events['transactions'].push(transaction);
-    else events['transactions'][index] = transaction;
+    console.log(transaction);
+    if (index < 0) {
+        console.log("Creating new transaction");
+        events['transactions'].push(transaction);
+    }
+    else {
+        console.log("Overwriting trans", index, " with", transaction);
+        events['transactions'][index] = transaction;
+    }
 
+    events['transactions'] = events['transactions'].sort(function(a,b) {
+        return a.name > b.name;
+    })
+    console.log(events['transactions']);
     $.ajax({
         type: "PUT",
         url: home_url,
-        data: JSON.stringify(window.events),
+        data: JSON.stringify(events),
         contentType: 'application/json; charset=utf-8',
         success: saveTransaction_complete,
+        complete: function(data) {
+            $( "#main" ).tabs( "destroy" );
+            $( "#main" ).html();
+            trigger_redraw();
+            view_manageTransactions();
+        },
         dataType: 'json'
     })
 }
@@ -1165,10 +1317,33 @@ function saveTransaction_complete(data) {
         window.location = "/" + data;
     }
     else {
-        events = data;
-        dialog.dialog( "close" );
-        $( "#main" ).tabs( "destroy" );
-        trigger_redraw();
-        view_manageTransactions();
+        // console.log(events);
+
+        // events["balances"] = []
+        // events["transactions"] = []
+        // events["relative"] = []
+
+        // count = data["balances"].length
+        // for (var i=0; i < count; i++) {
+        //     events["balances"].push(data["balances"][i])
+        // }
+
+        // count = data["transactions"].length
+        // for (var i=0; i < count; i++) {
+        //     events["transactions"].push(data["transactions"][i])
+        // }
+
+        // count = data["relative"].length
+        // for (var i=0; i < count; i++) {
+        //     events["relative"].push(data["relative"][i])
+        // }
+
+        // console.log(events);
+        // window.events = data;
+        // dialog.dialog( "close" );
+        // $( "#main" ).html();
+        // $( "#main" ).tabs( "destroy" );
+        // trigger_redraw();
+        // view_manageTransactions();
     }
 }
