@@ -21,37 +21,24 @@ describe('Natural Language Processing', function() {
         it('should return true because 23/3/2016 was specified to be included', function () {
             assert.equal(true, parse_dateCondition("every second Wednesday including 23/3/2016", new Date(2016,2,23), "test"));
         });
-        it('should return false because 30/3/2016 is ONE Wednesday after day to be included', function () {
+        it('should return false because 30/3/2016 is ONE Wednesday after date to be included', function () {
             assert.equal(false, parse_dateCondition("every second Wednesday including 23/3/2016", new Date(2016,2,30), "test"));
         });
-        it('should return false because 16/3/2016 is ONE Wednesday before day to be included', function () {
+        it('should return false because 16/3/2016 is ONE Wednesday before date to be included', function () {
             assert.equal(false, parse_dateCondition("every second Wednesday including 23/3/2016", new Date(2016,2,16), "test"));
         });
+        it('should return false because 22/3/2016 is a Tuesday', function () {
+            assert.equal(false, parse_dateCondition("every second Wednesday including 23/3/2016", new Date(2016,2,22), "test"));
+        });
+        it('should return false because 24/3/2016 is a Thursday', function () {
+            assert.equal(false, parse_dateCondition("every second Wednesday including 23/3/2016", new Date(2016,2,24), "test"));
+        });
     });
+    // Strings to add!
+    // Tuesday every two weeks
+    // Tuesday every two weeks including -date-
+    // Each fortnight on tuesday
+    // Each fortnight on tuesday including -date-
+    // every 10 weeks
   });
 });
-
-// tests = [
-//     // ["every wednesday"],
-//     // ["every second wednesday"],
-//     // ["every third wednesday"],
-//     ["every second Wednesday including 23/3/2016"]
-// ]
-
-// var dateStart = newDate(2016,3,1);
-// var dateEnd = newDate(2016,5,1);
-// // console.log(dateStart);
-// for (var d = dateStart; d <= dateEnd; d.setDate(d.getDate() + 1)) {
-//     if (d.getDay() != 3) continue;
-
-//     console.log(d.getDate(),'/',d.getMonth()+1,'/',d.getFullYear(),' -                         ', dayName(d.getDay()));
-//     for (var testno = 0; testno < tests.length; testno++) {
-//         console.log('"',tests[testno][0], '" = ', parse_dateCondition(tests[testno][0], d, "test"))
-//         console.log("TEST END");
-//         console.log("-");
-//         // console.log(testno);
-//     }
-//     console.log("-");
-//     console.log("-");
-//     console.log("-");
-// }

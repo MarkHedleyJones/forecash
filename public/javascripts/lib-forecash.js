@@ -52,18 +52,13 @@ var stride_week = function(date, stride, offset) {
     and returns whether this week falls within that date.
     An offset can shift the week within the window
     */
-    if (offset === null) {
-        offset = 0;
-    }
-    else if (offset instanceof Date) {
-        // console.log("Date offset = ",offset);
+
+    if (offset instanceof Date) {
         od = offset;
         offset = (od.getTime() - epoh.getTime()) % (ms_week * stride);
     }
-    else {
-        // console.log("Unknown offset value - omitting");
-        offset = 0;
-    }
+    else offset = 0;
+
     var full_width = date.getTime() - epoh.getTime() - offset;
     var stride = ms_week * stride;
     var displacement = full_width % stride;
