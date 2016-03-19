@@ -8,11 +8,10 @@ router.get('/', function (req, res) {
 });
 
 router.get('/events', function (req, res) {
-    console.log("Sending events...");
     events = {
         "balances": [
             {
-                "date": "2016-3-19",
+                "date": "20/3/2016",
                 "balance": 2683.59
             }
         ],
@@ -23,7 +22,7 @@ router.get('/events', function (req, res) {
                 "occurs": "every second Tuesday"
             },
             {
-                "name": "Bills",
+                "name": "Bill: Electricity",
                 "amount": -150.00,
                 "occurs": "on the 26th of each month"
             },
@@ -44,18 +43,13 @@ router.get('/events', function (req, res) {
             },
             {
                 "name": "Petrol",
-                "amount": -60.00,
-                "occurs": "every Sunday"
+                "amount": -40.00,
+                "occurs": "every second Sunday"
             },
             {
-                "name": "Cell phone bill",
+                "name": "Bill: Cell-phone",
                 "amount": -20.00,
                 "occurs": "on the 24th of each month"
-            },
-            {
-                "name": "Vehicle registration",
-                "amount": -147.58,
-                "occurs": "on the 1st of every third month"
             },
             {
                 "name": "Vehicle warrant of fitness",
@@ -63,7 +57,7 @@ router.get('/events', function (req, res) {
                 "occurs": "on the 28th of every 9 months"
             },
             {
-                "name": "Gym membership",
+                "name": "Bill: Gym membership",
                 "amount": -21.90,
                 "occurs": "every fortnight"
             },
@@ -73,14 +67,9 @@ router.get('/events', function (req, res) {
                 "occurs": "every Friday"
             },
             {
-                "name": "Partner's Xmas present",
-                "amount": -200.00,
-                "occurs": "on the 20th of December"
-            },
-            {
-                "name": "Xmas presents for the family",
+                "name": "Christmas presents",
                 "amount": -100.00,
-                "occurs": "on the 20th of December"
+                "occurs": "on the 18th of December"
             },
             {
                 "name": "Partners birthday present",
