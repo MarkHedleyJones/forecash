@@ -45,7 +45,7 @@ var ms_week = ms_day * 7;
 var today = new Date();
 
 
-var stride_week = function(date, stride, offset=null) {
+var stride_week = function(date, stride, offset) {
     // console.log(date, stride, offset);
     /*
     Takes a date and a stride (as in 2 for fortnight, 3 for three weeks)
@@ -64,28 +64,24 @@ var stride_week = function(date, stride, offset=null) {
         // console.log("Unknown offset value - omitting");
         offset = 0;
     }
+    var full_width = date.getTime() - epoh.getTime() - offset;
+    var stride = ms_week * stride;
+    var displacement = full_width % stride;
+    var displacement_days = Math.ceil(displacement / ms_day);
+
     // console.log('offset =',offset,'=',offset/ms_day,'days');
     // console.log(epoh);
     // console.log(date);
     // console.log('date.getTime() = ', date.getTime(), "=", (date.getTime()/ms_day), 'days since epoh');
     // console.log('epoh.getTime() = ', epoh.getTime(), "=", (epoh.getTime()/ms_day), 'days since epoh');
-
-    var full_width = date.getTime() - epoh.getTime() - offset;
     // console.log('full_width =', full_width,'=',full_width/ms_day,'days');
-    var stride = ms_week * stride;
     // console.log('stride =',stride,'=',stride/ms_day,'days');
-    var displacement = full_width % stride;
     // console.log('displacement =',displacement,'=',displacement/ms_day,'days');
-    var displacement_days = Math.ceil(displacement / ms_day);
     // console.log('displacement_days =',displacement_days,'days');
-
-
     // console.log('safe_zone =', ms_week,'=',ms_week/ms_day,'days');
+
     if (stride <= 1) return true;
-    else return displacement_days <= 7;
-
-    // return (((date.getTime() - epoh.getTime()) % (ms_week * stride)) - offset * ms_week) < ms_week;
-
+    else return displacement_days < 7;
 }
 
 function secondsBetween(date_ref, date_cmp) {
