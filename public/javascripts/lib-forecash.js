@@ -296,7 +296,9 @@ function parse_subNatLang(keys, values) {
     else if (arraysEqual(keys, ["quantifier", "weekday"])) {
         return function(date) { return (date.getDay() == daysofweek.indexOf(values[1])) && stride_week(date, values[0])};
     }
-
+    else if (arraysEqual(keys, ["weekday", "quantifier"])) {
+        return function(date) { return (date.getDay() == daysofweek.indexOf(values[0])) && stride_week(date, values[1])};
+    }
     else if (arraysEqual(keys, ["quantifier", "weekday", "date", "date"])) {
         // Every wednesday 16/3/2016
         // console.log('Matched format ["quantifier", "weekday", "date"]')
@@ -330,6 +332,12 @@ function parse_subNatLang(keys, values) {
         return function(date) {
             return (date.getDay() == daysofweek.indexOf(values[1]) &&
                     stride_week(date, values[0], values[3]))
+            };
+    }
+    else if (arraysEqual(keys, ["weekday", "quantifier", "phase_adjust", "date"])) {
+        return function(date) {
+            return (date.getDay() == daysofweek.indexOf(values[0]) &&
+                    stride_week(date, values[1], values[3]))
             };
     }
     else if (arraysEqual(keys, ["quantifier", "weekday", "range_start", "date", "range_end", "date"])) {

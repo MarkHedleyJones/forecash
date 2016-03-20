@@ -34,11 +34,47 @@ describe('Natural Language Processing', function() {
             assert.equal(false, parse_dateCondition("every second Wednesday including 23/3/2016", new Date(2016,2,24), "test"));
         });
     });
+    describe('Tuesday every two weeks', function () {
+        it('should return true because 15/3/2016 is an even Tuesday', function () {
+            assert.equal(true, parse_dateCondition("Tuesday every two weeks", new Date(2016,2,15), "test"));
+        });
+        it('should return false because 22/3/2016 is an odd Tuesday', function () {
+            assert.equal(false, parse_dateCondition("Tuesday every two weeks", new Date(2016,2,22), "test"));
+        });
+        it('should return true because 29/3/2016 is an even Tuesday', function () {
+            assert.equal(true, parse_dateCondition("Tuesday every two weeks", new Date(2016,2,29), "test"));
+        });
+        it('should return false because 14/3/2016 is a Monday', function () {
+            assert.equal(false, parse_dateCondition("Tuesday every two weeks", new Date(2016,2,14), "test"));
+        });
+        it('should return false because 16/3/2016 is a Wednesday', function () {
+            assert.equal(false, parse_dateCondition("Tuesday every two weeks", new Date(2016,2,16), "test"));
+        });
+    });
+    describe('Tuesday every two weeks including 22/3/2016', function () {
+        it('should return true because 8/3/2016 is a specified Tuesday', function () {
+            assert.equal(true, parse_dateCondition("Tuesday every two weeks including 22/3/2016", new Date(2016,2,8), "test"));
+        });
+        it('should return false because 15/3/2016 is the non-specified Tuesday', function () {
+            assert.equal(false, parse_dateCondition("Tuesday every two weeks including 22/3/2016", new Date(2016,2,15), "test"));
+        });
+        it('should return true because 22/3/2016 was a specified Tuesday', function () {
+            assert.equal(true, parse_dateCondition("Tuesday every two weeks including 22/3/2016", new Date(2016,2,22), "test"));
+        });
+        it('should return false because 29/3/2016 was a non-specified Tuesday', function () {
+            assert.equal(false, parse_dateCondition("Tuesday every two weeks including 22/3/2016", new Date(2016,2,29), "test"));
+        });
+        it('should return false because 21/3/2016 is a Monday', function () {
+            assert.equal(false, parse_dateCondition("Tuesday every two weeks including 22/3/2016", new Date(2016,2,21), "test"));
+        });
+        it('should return false because 23/3/2016 is a Wednesday', function () {
+            assert.equal(false, parse_dateCondition("Tuesday every two weeks including 22/3/2016", new Date(2016,2,23), "test"));
+        });
+    });
     // Strings to add!
-    // Tuesday every two weeks
-    // Tuesday every two weeks including -date-
     // Each fortnight on tuesday
     // Each fortnight on tuesday including -date-
-    // every 10 weeks
+    // Tuesday every fortnight
+    // every 2 weeks
   });
 });
