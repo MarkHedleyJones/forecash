@@ -71,10 +71,29 @@ describe('Natural Language Processing', function() {
             assert.equal(false, parse_dateCondition("Tuesday every two weeks including 22/3/2016", new Date(2016,2,23), "test"));
         });
     });
+    describe('every 2 weeks', function () {
+        it('should return true because 13/3/2016 is an even Sunday', function () {
+            assert.equal(true, parse_dateCondition("every 2 weeks", new Date(2016,2,13), "test"));
+        });
+        it('should return false because 20/3/2016 is an odd Sunday', function () {
+            assert.equal(false, parse_dateCondition("every 2 weeks", new Date(2016,2,20), "test"));
+        });
+        it('should return true because 27/3/2016 the next even Sunday', function () {
+            assert.equal(true, parse_dateCondition("every 2 weeks", new Date(2016,2,27), "test"));
+        });
+        it('should return false because 6/3/2016 is an odd Sunday', function () {
+            assert.equal(false, parse_dateCondition("every 2 weeks", new Date(2016,2,6), "test"));
+        });
+        it('should return false because 12/3/2016 is a Saturday', function () {
+            assert.equal(false, parse_dateCondition("every 2 weeks", new Date(2016,2,12), "test"));
+        });
+        it('should return false because 14/3/2016 is a Monday', function () {
+            assert.equal(false, parse_dateCondition("every 2 weeks", new Date(2016,2,14), "test"));
+        });
+    });
     // Strings to add!
     // Each fortnight on tuesday
     // Each fortnight on tuesday including -date-
     // Tuesday every fortnight
-    // every 2 weeks
   });
 });

@@ -46,6 +46,7 @@ var today = new Date();
 
 
 var stride_week = function(date, stride, offset) {
+    date.setHours(0,0,0,0);
     // console.log(date, stride, offset);
     /*
     Takes a date and a stride (as in 2 for fortnight, 3 for three weeks)
@@ -55,11 +56,12 @@ var stride_week = function(date, stride, offset) {
 
     if (offset instanceof Date) {
         od = offset;
+        od.setHours(0,0,0,0);
         offset = (od.getTime() - epoh.getTime()) % (ms_week * stride);
     }
     else offset = 0;
 
-    var full_width = date.getTime() - epoh.getTime() - offset;
+    var full_width = (Math.ceil(date.getTime()/ms_week)*ms_week) - (Math.ceil(epoh.getTime()/ms_week) * ms_week) + offset;
     var stride = ms_week * stride;
     var displacement = full_width % stride;
     var displacement_days = Math.ceil(displacement / ms_day);
@@ -340,6 +342,12 @@ function parse_subNatLang(keys, values) {
                     stride_week(date, values[1], values[3]))
             };
     }
+    else if (arraysEqual(keys, ["weekday", "quantifier", "time_unit", "phase_adjust", "date"]) && values[2] == 'week') {
+        return function(date) {
+            return (date.getDay() == daysofweek.indexOf(values[0]) &&
+                    stride_week(date, values[1], values[4]))
+            };
+    }
     else if (arraysEqual(keys, ["quantifier", "weekday", "range_start", "date", "range_end", "date"])) {
         // Every wednesday from 16/3/2016
         // console.log('Matched format ["quantifier", "weekday", "range_start", "date", "range_end", "date"]')
@@ -381,9 +389,8 @@ function parse_subNatLang(keys, values) {
     else if (arraysEqual(keys, ["quantifier", "time_unit"]) && values[1] == "week") {
         // Every fortnight (no day specified)
         return function(date) {
-            return (date.getDay() == 0 &&
-                    stride_week(date, values[0]))
-            };
+            return (date.getDay() == 0 && stride_week(date, values[0]));
+        }
     }
     else if (arraysEqual(keys, ["dayofmonth", "month"])) {
         return function(date) { return date.getMonth() == monthnames.indexOf(values[1]) && date.getDate() == values[0]; };
@@ -431,6 +438,10 @@ function parse_dateCondition(string, date, title) {
         else if (part.slice(0,3) == 'day') {
             part_key = 'time_unit';
             part_val = 'day';
+        }
+        else if (part.slice(0,4) == 'week') {
+            part_key = 'time_unit';
+            part_val = 'week';
         }
         else if (monthnames.indexOf(part) != -1) {
             part_key = 'month';
