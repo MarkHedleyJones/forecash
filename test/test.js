@@ -91,9 +91,48 @@ describe('Natural Language Processing', function() {
             assert.equal(false, parse_dateCondition("every 2 weeks", new Date(2016,2,14), "test"));
         });
     });
-    // Strings to add!
-    // Each fortnight on tuesday
-    // Each fortnight on tuesday including -date-
-    // Tuesday every fortnight
+    describe('each fortnight including 6/3/2016', function () {
+        it('should return true because 6/3/2016 is an even Sunday', function () {
+            assert.equal(true, parse_dateCondition("each fortnight including 6/3/2016", new Date(2016,2,6), "test"));
+        });
+        it('should return false because 13/3/2016 is an odd Sunday', function () {
+            assert.equal(false, parse_dateCondition("each fortnight including 6/3/2016", new Date(2016,2,13), "test"));
+        });
+        it('should return true because 20/3/2016 the next even Sunday', function () {
+            assert.equal(true, parse_dateCondition("each fortnight including 6/3/2016", new Date(2016,2,20), "test"));
+        });
+        it('should return false because 27/3/2016 is an odd Sunday', function () {
+            assert.equal(false, parse_dateCondition("each fortnight including 6/3/2016", new Date(2016,2,27), "test"));
+        });
+        it('should return false because 5/3/2016 is a Saturday', function () {
+            assert.equal(false, parse_dateCondition("each fortnight including 6/3/2016", new Date(2016,2,5), "test"));
+        });
+        it('should return false because 7/3/2016 is a Monday', function () {
+            assert.equal(false, parse_dateCondition("each fortnight including 6/3/2016", new Date(2016,2,7), "test"));
+        });
+    });
+    describe('the first tuesday of the month', function () {
+        it('should return true because 1/3/2016 is the first Tuesday', function () {
+            assert.equal(true, parse_dateCondition("the first tuesday of the month", new Date(2016,2,1), "test"));
+        });
+        it('should return false because 8/3/2016 is the second Tuesday', function () {
+            assert.equal(false, parse_dateCondition("the first tuesday of the month", new Date(2016,2,8), "test"));
+        });
+        it('should return false because 15/3/2016 is the third Tuesday', function () {
+            assert.equal(false, parse_dateCondition("the first tuesday of the month", new Date(2016,2,15), "test"));
+        });
+        it('should return true because 5/4/2016 is the first Tuesday', function () {
+            assert.equal(true, parse_dateCondition("the first tuesday of the month", new Date(2016,3,5), "test"));
+        });
+        it('should return false because 4/4/2016 is a Monday', function () {
+            assert.equal(false, parse_dateCondition("the first tuesday of the month", new Date(2016,3,4), "test"));
+        });
+        it('should return false because 6/4/2016 is a Wednesday', function () {
+            assert.equal(false, parse_dateCondition("the first tuesday of the month", new Date(2016,3,6), "test"));
+        });
+        it('should return true because 7/6/2016 is first Tuesday of June', function () {
+            assert.equal(true, parse_dateCondition("the first tuesday of the month", new Date(2016,5,7), "test"));
+        });
+    });
   });
 });

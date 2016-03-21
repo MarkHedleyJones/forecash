@@ -30,6 +30,8 @@ function dateDiff (dateRef, dateCmp) {
 }
 
 var epoh = new Date(1970, 0, 4); // First JS day of the week (Sunday) 1970
+
+// epoh.setTime(Math.floor(epoh.getTime() / ms_day));
 // Monday is ISO first day of the, but Sunday is day 0 in Javascript so Sunday is used
 
 var Monday = 1;
@@ -44,6 +46,9 @@ var ms_day = 1000.0*60.0*60.0*24.0;
 var ms_week = ms_day * 7;
 var today = new Date();
 
+epoh.setTime(Math.floor(epoh.getTime() / ms_day));
+// console.log(Math.floor(epoh.getTime() / ms_day));
+console.log(epoh.getTime() / ms_day);
 
 var stride_week = function(date, stride, offset) {
     date.setHours(0,0,0,0);
@@ -330,10 +335,23 @@ function parse_subNatLang(keys, values) {
                     date_int(date) <= date_int(values[4]))
             };
     }
+    else if (arraysEqual(keys, ["quantifier", "time_unit", "phase_adjust", "date"]) && values[1] == 'week') {
+        return function(date) {
+            return (date.getDay() == 0 &&
+                    stride_week(date, values[0], values[3]))
+            };
+    }
     else if (arraysEqual(keys, ["quantifier", "weekday", "phase_adjust", "date"])) {
         return function(date) {
             return (date.getDay() == daysofweek.indexOf(values[1]) &&
                     stride_week(date, values[0], values[3]))
+            };
+    }
+    else if (arraysEqual(keys, ["quantifier", "weekday", "time_unit"]) && values[2] == 'month') {
+        return function(date) {
+            return (date.getDay() == daysofweek.indexOf(values[1]) &&
+                    date.getDate() > (values[0] - 1) * 7 &&
+                    date.getDate() <= (values[0]) * 7)
             };
     }
     else if (arraysEqual(keys, ["weekday", "quantifier", "phase_adjust", "date"])) {
