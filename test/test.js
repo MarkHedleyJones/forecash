@@ -134,5 +134,89 @@ describe('Natural Language Processing', function() {
             assert.equal(true, parse_dateCondition("the first tuesday of the month", new Date(2016,5,7), "test"));
         });
     });
+
+    describe('every 28 days', function () {
+        it('should return true because 25/3/2016 is in the default 28 day cycle', function () {
+            assert.equal(true, parse_dateCondition('every 28 days', new Date(2016,2,25), "test"));
+        });
+        it('should return true because 22/4/2016 is in the default 28 day cycle', function () {
+            assert.equal(true, parse_dateCondition('every 28 days', new Date(2016,3,22), "test"));
+        });
+        it('should return true because 20/5/2016 is in the default 28 day cycle', function () {
+            assert.equal(true, parse_dateCondition('every 28 days', new Date(2016,4,20), "test"));
+        });
+        it('should return false because 22/3/2016 is not in the cycle', function () {
+            assert.equal(false, parse_dateCondition('every 28 days', new Date(2016,2,22), "test"));
+        });
+        it('should return false because 25/4/2016 is not in the cycle', function () {
+            assert.equal(false, parse_dateCondition('every 28 days', new Date(2016,3,25), "test"));
+        });
+        it('should return false because 27/3/2016 is not in the cycle', function () {
+            assert.equal(false, parse_dateCondition('every 28 days', new Date(2016,2,27), "test"));
+        });
+        it('should return false because 24/3/2016 is not in the cycle', function () {
+            assert.equal(false, parse_dateCondition('every 28 days', new Date(2016,2,24), "test"));
+        });
+    });
+
+    describe('every 28 days starting 20/3/2016', function () {
+        it('should return true because 20/3/2016 is in the default 28 day cycle', function () {
+            assert.equal(true, parse_dateCondition('every 28 days starting 20/3/2016', new Date(2016,2,20), "test"));
+        });
+        it('should return true because 17/4/2016 is in the default 28 day cycle', function () {
+            assert.equal(true, parse_dateCondition('every 28 days starting 20/3/2016', new Date(2016,3,17), "test"));
+        });
+        it('should return true because 15/5/2016 is in the default 28 day cycle', function () {
+            assert.equal(true, parse_dateCondition('every 28 days starting 20/3/2016', new Date(2016,4,15), "test"));
+        });
+        it('should return false because 17/3/2016 is not in the cycle', function () {
+            assert.equal(false, parse_dateCondition('every 28 days starting 20/3/2016', new Date(2016,2,17), "test"));
+        });
+        it('should return false because 20/4/2016 is not in the cycle', function () {
+            assert.equal(false, parse_dateCondition('every 28 days starting 20/3/2016', new Date(2016,3,20), "test"));
+        });
+        it('should return false because 22/3/2016 is not in the cycle', function () {
+            assert.equal(false, parse_dateCondition('every 28 days starting 20/3/2016', new Date(2016,2,22), "test"));
+        });
+        it('should return false because 19/3/2016 is not in the cycle', function () {
+            assert.equal(false, parse_dateCondition('every 28 days starting 20/3/2016', new Date(2016,2,19), "test"));
+        });
+        it('should return false because 21/2/2016 occurs before the 20th', function () {
+            assert.equal(false, parse_dateCondition('every 28 days starting 20/3/2016', new Date(2016,1,21), "test"));
+        });
+    });
+
+    describe('every 28 days including 20/3/2016', function () {
+        it('should return true because 20/3/2016 is in the default 28 day cycle', function () {
+            assert.equal(true, parse_dateCondition('every 28 days including 20/3/2016', new Date(2016,2,20), "test"));
+        });
+        it('should return true because 17/4/2016 is in the default 28 day cycle', function () {
+            assert.equal(true, parse_dateCondition('every 28 days including 20/3/2016', new Date(2016,3,17), "test"));
+        });
+        it('should return true because 15/5/2016 is in the default 28 day cycle', function () {
+            assert.equal(true, parse_dateCondition('every 28 days including 20/3/2016', new Date(2016,4,15), "test"));
+        });
+        it('should return false because 17/3/2016 is not in the cycle', function () {
+            assert.equal(false, parse_dateCondition('every 28 days including 20/3/2016', new Date(2016,2,17), "test"));
+        });
+        it('should return false because 20/4/2016 is not in the cycle', function () {
+            assert.equal(false, parse_dateCondition('every 28 days including 20/3/2016', new Date(2016,3,20), "test"));
+        });
+        it('should return false because 22/3/2016 is not in the cycle', function () {
+            assert.equal(false, parse_dateCondition('every 28 days including 20/3/2016', new Date(2016,2,22), "test"));
+        });
+        it('should return false because 19/3/2016 is not in the cycle', function () {
+            assert.equal(false, parse_dateCondition('every 28 days including 20/3/2016', new Date(2016,2,19), "test"));
+        });
+        it('should return true because 21/2/2016 occurs before the 20th but is in that cycle', function () {
+            assert.equal(true, parse_dateCondition('every 28 days including 20/3/2016', new Date(2016,1,21), "test"));
+        });
+    });
+    // Every 28 days
+    // Every 28 days starting -date-
+    // Every 28 days including -date-
+    // Every 2 months
+    // Every 2 months starting -date-
+    // Every 2 months including -date- ? what does this mean?
   });
 });

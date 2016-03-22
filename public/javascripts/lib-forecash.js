@@ -48,7 +48,6 @@ var today = new Date();
 
 epoh.setTime(Math.floor(epoh.getTime() / ms_day));
 // console.log(Math.floor(epoh.getTime() / ms_day));
-console.log(epoh.getTime() / ms_day);
 
 var stride_week = function(date, stride, offset) {
     date.setHours(0,0,0,0);
@@ -335,11 +334,18 @@ function parse_subNatLang(keys, values) {
                     date_int(date) <= date_int(values[4]))
             };
     }
-    else if (arraysEqual(keys, ["quantifier", "time_unit", "phase_adjust", "date"]) && values[1] == 'week') {
-        return function(date) {
-            return (date.getDay() == 0 &&
-                    stride_week(date, values[0], values[3]))
-            };
+    else if (arraysEqual(keys, ["quantifier", "time_unit", "phase_adjust", "date"])) {
+        if (values[1] == 'week') {
+            return function(date) {
+                return (date.getDay() == 0 &&
+                        stride_week(date, values[0], values[3]))
+                };
+        }
+        else if (values[1] == 'day') {
+            return function(date) {
+                return (Math.floor(date.getTime() / ms_day) % values[0]) - (Math.floor(values[3].getTime() / ms_day) % values[0]) == 0;
+            }
+        }
     }
     else if (arraysEqual(keys, ["quantifier", "weekday", "phase_adjust", "date"])) {
         return function(date) {
@@ -362,9 +368,13 @@ function parse_subNatLang(keys, values) {
     }
     else if (arraysEqual(keys, ["weekday", "quantifier", "time_unit", "phase_adjust", "date"]) && values[2] == 'week') {
         return function(date) {
-            return (date.getDay() == daysofweek.indexOf(values[0]) &&
-                    stride_week(date, values[1], values[4]))
-            };
+            return (date.getDay() == daysofweek.indexOf(values[0]) && stride_week(date, values[1], values[4]))
+        }
+    }
+    else if (arraysEqual(keys, ["weekday", "quantifier", "time_unit"]) && values[2] == 'week') {
+        return function(date) {
+            return (date.getDay() == daysofweek.indexOf(values[0]) && stride_week(date, values[1]))
+        }
     }
     else if (arraysEqual(keys, ["quantifier", "weekday", "range_start", "date", "range_end", "date"])) {
         // Every wednesday from 16/3/2016
@@ -402,12 +412,23 @@ function parse_subNatLang(keys, values) {
         else if (values[1] == 'week') {
             return function(date) { return whole(days_between(date, values[3])) % (7 * values[0])  == 0; };
         }
+        else if (values[1] == 'day') {
+            return function(date) {
+                return ((Math.floor(date.getTime() / ms_day) % values[0]) - (Math.floor(values[3].getTime() / ms_day) % values[0]) == 0) &&
+                        date.getTime() >= values[3].getTime();
+            }
+        }
 
     }
     else if (arraysEqual(keys, ["quantifier", "time_unit"]) && values[1] == "week") {
         // Every fortnight (no day specified)
         return function(date) {
             return (date.getDay() == 0 && stride_week(date, values[0]));
+        }
+    }
+    else if (arraysEqual(keys, ["quantifier", "time_unit"]) && values[1] == "day") {
+        return function(date) {
+            return (Math.floor(date.getTime() / ms_day) % values[0]) == 0;
         }
     }
     else if (arraysEqual(keys, ["dayofmonth", "month"])) {
@@ -418,7 +439,7 @@ function parse_subNatLang(keys, values) {
     }
     else {
         // console.log("Failed to match format", keys);
-        return false;
+        return function(date) { return false};
     }
 }
 
