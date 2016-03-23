@@ -292,12 +292,99 @@ function parse_dayOfMonth(string) {
 }
 
 function parse_subNatLang(keys, values) {
-    if (arraysEqual(keys, ["dayofmonth"])) {
+    if (arraysEqual(keys, ["weekday"])) {
+        return function (date) { return date.getDay() == daysofweek.indexOf(values[0]); };
+    }
+    else if (arraysEqual(keys, ["dayofmonth"])) {
         // console.log("It must occur before " + values[1]);
         return function(date) { return date.getDate() == values[0]; };
     }
-    else if (arraysEqual(keys, ["weekday"])) {
-        return function (date) { return date.getDay() == daysofweek.indexOf(values[0]); };
+    else if (arraysEqual(keys, ["date"])) {
+        return function(date) { return date.getFullYear() == values[0].getFullYear() && (date.getMonth()) == values[0].getMonth() && date.getDate() == values[0].getDate();}
+    }
+    else if (arraysEqual(keys, ["time_unit"])) {
+        if (values[0] == 'day') {
+            return function(date) {
+                // like "every day"
+                return true;
+            }
+        }
+        else if (values[0] == 'week') {
+            return function(date) {
+                // like "every week"
+                return date.getDay() == 0;
+            }
+        }
+        else if (values[0] == 'month') {
+            return function(date) {
+                // like "every month"
+                return date.getDate() == 1;
+            }
+        }
+        else if (values[0] == 'year') {
+            return function (date) {
+                // like "every year"
+                return date.getDate() == 1 && date.getMonth() == 0;
+            }
+        }
+        else return function(date) {return false;}
+    }
+    else if (arraysEqual(keys, ["time_unit", "phase_adjust", "date"])) {
+        if (values[0] == 'day') {
+            return function(date) {
+                // Every day including 2/2/2016
+                return true;
+            }
+        }
+        else if (values[0] == 'week') {
+            return function(date) {
+                // Every week including 2/2/2016
+                return date.getDay() == values[2].getDay();
+            }
+        }
+        else if (values[0] == 'month') {
+            return function(date) {
+                //Every month including 2/2/2016
+                return date.getDate() == values[2].getDate();
+            }
+        }
+        else if (values[0] == 'year') {
+            return function(date) {
+                //Every year including 2/2/2016
+                return date.getDate() == values[2].getDate() &&
+                       date.getMonth() == values[2].getMonth();
+            }
+        }
+    }
+    else if (arraysEqual(keys, ["time_unit", "range_start", "date"])) {
+        if (values[0] == 'day') {
+            return function(date) {
+                // Every day starting 2/2/2016
+                return date.getTime() >= values[2].getTime();
+            }
+        }
+        else if (values[0] == 'week') {
+            return function(date) {
+                // Every week starting 2/2/2016
+                return date.getDay() == values[2].getDay() &&
+                       date.getTime() >= values[2].getTime();
+            }
+        }
+        else if (values[0] == 'month') {
+            return function(date) {
+                //Every month starting 2/2/2016
+                return date.getDate() == values[2].getDate() &&
+                       date.getTime() >= values[2].getTime();
+            }
+        }
+        else if (values[0] == 'year') {
+            return function(date) {
+                //Every year starting 2/2/2016
+                return date.getDate() == values[2].getDate() &&
+                       date.getMonth() == values[2].getMonth() &&
+                       date.getTime() >= values[2].getTime();
+            }
+        }
     }
     else if (arraysEqual(keys, ["quantifier", "weekday"])) {
         return function(date) { return (date.getDay() == daysofweek.indexOf(values[1])) && stride_week(date, values[0])};
@@ -317,7 +404,6 @@ function parse_subNatLang(keys, values) {
     }
     else if (arraysEqual(keys, ["quantifier", "weekday", "date"])) {
         // Every wednesday 16/3/2016
-        // console.log('Matched format ["quantifier", "weekday", "date"]')
         return function(date) {
             return (date.getDay() == daysofweek.indexOf(values[1]) &&
                     stride_week(date, values[0], values[2]) &&
@@ -326,7 +412,6 @@ function parse_subNatLang(keys, values) {
     }
     else if (arraysEqual(keys, ["quantifier", "weekday", "range", "date", "date"])) {
         // Every wednesday from 16/3/2016
-        // console.log('Matched format ["quantifier", "weekday", "range", "date", "date"]')
         return function(date) {
             return (date.getDay() == daysofweek.indexOf(values[1]) &&
                     stride_week(date, values[0], values[3]) &&
@@ -433,9 +518,6 @@ function parse_subNatLang(keys, values) {
     }
     else if (arraysEqual(keys, ["dayofmonth", "month"])) {
         return function(date) { return date.getMonth() == monthnames.indexOf(values[1]) && date.getDate() == values[0]; };
-    }
-    else if (arraysEqual(keys, ["date"])) {
-        return function(date) { return date.getFullYear() == values[0].getFullYear() && (date.getMonth()) == values[0].getMonth() && date.getDate() == values[0].getDate();}
     }
     else {
         // console.log("Failed to match format", keys);

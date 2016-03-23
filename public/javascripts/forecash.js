@@ -622,7 +622,9 @@ function render_calendar(container,year,month) {
     tab_data = "";
     tab_data += "<div>"+monthName(date_start.getMonth())+" <span>("+date_start.getFullYear()+")<span></div>";
     tab_data += "<table><tr><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th><th>S</th></tr>";
-    date_start.setDate(date_start.getDate() - (date_start.getDay() - 1));
+    if (date_start.getDay() > 0) {
+        date_start.setDate(date_start.getDate() - (date_start.getDay() - 1));
+    }
     date = new Date(dateISO(date_start));
     for (var i = 0; i < 6; i++) {
         tab_data += "<tr>";
