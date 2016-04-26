@@ -29,8 +29,10 @@ block content
         delete splash;
     })
 
-  #head
-    h1.c(style='margin-top: 5px') Forecash
+  #head.c
+    //h1.c(style='margin-top: 5px') Fore.cash
+    a(href="/")
+      img(src="/images/logo.png", style="margin-top: 10px")
 
   #fixed
     #chart(ng-controller='ForecastControl')
@@ -49,10 +51,10 @@ block content
     #controls
       input#redraw_trigger(type="hidden")
       | Start:
-      input#date_forecastStart.decor(style='width:100px')
+      input#date_forecastStart.decor
       | End:
-      input#date_forecastEnd.decor(style='width:100px')
-      #button_view.button.btn_blue(onclick='view_manageTransactions("main")')
+      input#date_forecastEnd.decor
+      #button_view.button.btn_blue(onclick='view_manageTransactions("main")', style="margin-left:20px")
         span TRANSACTION VIEW
     #transaction_wide
 
